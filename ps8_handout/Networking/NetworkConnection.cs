@@ -112,7 +112,7 @@ public sealed class NetworkConnection : IDisposable
     /// <returns> The contents of the message. </returns>
     public string ReadLine()
     {
-     try
+        try
         {
             return _reader.ReadLine();
         }
