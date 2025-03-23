@@ -94,7 +94,10 @@ public sealed class NetworkConnection : IDisposable
     {
         try
         {
-            _writer!.WriteLine(message);
+            if (_writer != null)
+            {
+                _writer!.WriteLine(message);
+            }
         }
         catch
         {
@@ -114,11 +117,32 @@ public sealed class NetworkConnection : IDisposable
     {
         try
         {
-            return _reader.ReadLine();
+            if (_reader != null)
+            {
+                lock (_reader)
+                {
+                    string? message = _reader.ReadLine();
+                    if (message != null)
+                        return message;
+                }
+            }
+            return string.Empty;
+            //if (IsConnected)
+            //{
+            //    lock (_reader)
+            //    {
+            //        string? message;
+            //        if (_reader != null)
+            //        {
+            //            message = _reader!.ReadLine();
+            //        }
+            //    }
+            //}
+            //    return "";
         }
-        catch
+        catch (Exception e)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException(e.Message);
         }
     }
 

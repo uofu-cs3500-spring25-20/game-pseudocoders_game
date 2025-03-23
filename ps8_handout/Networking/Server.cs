@@ -15,6 +15,8 @@ namespace CS3500.Networking;
 public static class Server
 {
 
+    private static List<NetworkConnection> clients = new();
+
     /// <summary>
     ///   Wait on a TcpListener for new connections. Alert the main program
     ///   via a callback (delegate) mechanism.
@@ -30,9 +32,17 @@ public static class Server
 
         listener.Start();
 
+        NetworkConnection conn = new NetworkConnection();
+
         while (true)
         {
-            NetworkConnection conn = new NetworkConnection(listener.AcceptTcpClient());
+            //NetworkConnection conn = new NetworkConnection();
+            conn = new NetworkConnection(listener.AcceptTcpClient());
+
+            lock (clients)
+            {
+                clients.Add(conn);
+            }
 
             Console.Write("accepted a connection");
 
