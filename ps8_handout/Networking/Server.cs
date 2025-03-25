@@ -1,8 +1,9 @@
 ﻿// <copyright file="Server.cs" company="UofU-CS3500">
 // Copyright (c) 2024 UofU-CS3500. All rights reserved.
+// Authors: Kailey Nothamn, Callum Dingley
+// Version: 3/25/2025
 // </copyright>
 
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 
@@ -14,9 +15,6 @@ namespace CS3500.Networking;
 /// </summary>
 public static class Server
 {
-
-    private static List<NetworkConnection> clients = new();
-
     /// <summary>
     ///   Wait on a TcpListener for new connections. Alert the main program
     ///   via a callback (delegate) mechanism.
@@ -32,22 +30,11 @@ public static class Server
 
         listener.Start();
 
-        NetworkConnection conn = new NetworkConnection();
-
         while (true)
         {
-            //NetworkConnection conn = new NetworkConnection();
-            conn = new NetworkConnection(listener.AcceptTcpClient());
-
-            lock (clients)
-            {
-                clients.Add(conn);
-            }
-
-            Console.Write("accepted a connection");
+            NetworkConnection conn = new NetworkConnection(listener.AcceptTcpClient());
 
             new Thread(() => handleConnect(conn)).Start();
-
         }
     }
 }

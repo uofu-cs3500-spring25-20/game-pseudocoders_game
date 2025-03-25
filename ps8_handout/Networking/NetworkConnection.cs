@@ -1,10 +1,12 @@
 ﻿// <copyright file="NetworkConnection.cs" company="UofU-CS3500">
 // Copyright (c) 2024 UofU-CS3500. All rights reserved.
+// Authors: Kailey Nothamn, Callum Dingley
+// Version: 3/25/2025
 // </copyright>
 
-using System;
 using System.Net.Sockets;
 using System.Text;
+
 namespace CS3500.Networking;
 
 /// <summary>
@@ -13,153 +15,147 @@ namespace CS3500.Networking;
 /// </summary>
 public sealed class NetworkConnection : IDisposable
 {
-    /// <summary>
-    ///   The connection/socket abstraction
-    /// </summary>
-    private TcpClient _tcpClient = new();
+	/// <summary>
+	///   The connection/socket abstraction
+	/// </summary>
+	private TcpClient _tcpClient = new();
 
-    /// <summary>
-    ///   Reading end of the connection
-    /// </summary>
-    private StreamReader? _reader = null;
+	/// <summary>
+	///   Reading end of the connection
+	/// </summary>
+	private StreamReader? _reader = null;
 
-    /// <summary>
-    ///   Writing end of the connection
-    /// </summary>
-    private StreamWriter? _writer = null;
+	/// <summary>
+	///   Writing end of the connection
+	/// </summary>
+	private StreamWriter? _writer = null;
 
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="NetworkConnection"/> class.
-    ///   <para>
-    ///     Create a network connection object.
-    ///   </para>
-    /// </summary>
-    /// <param name="tcpClient">
-    ///   An already existing TcpClient
-    /// </param>
-    public NetworkConnection(TcpClient tcpClient)
-    {
-        _tcpClient = tcpClient;
-        if (IsConnected)
-        {
-            // Only establish the reader/writer if the provided TcpClient is already connected.
-            _reader = new StreamReader(_tcpClient.GetStream(), Encoding.UTF8);
-            _writer = new StreamWriter(_tcpClient.GetStream(), Encoding.UTF8) { AutoFlush = true }; // AutoFlush ensures data is sent immediately
-        }
-    }
+	/// <summary>
+	///   Initializes a new instance of the <see cref="NetworkConnection"/> class.
+	///   <para>
+	///     Create a network connection object.
+	///   </para>
+	/// </summary>
+	/// <param name="tcpClient">
+	///   An already existing TcpClient
+	/// </param>
+	public NetworkConnection(TcpClient tcpClient)
+	{
+		_tcpClient = tcpClient;
+		this.Name = "client";
 
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="NetworkConnection"/> class.
-    ///   <para>
-    ///     Create a network connection object.  The tcpClient will be unconnected at the start.
-    ///   </para>
-    /// </summary>
-    public NetworkConnection() : this(new TcpClient())
-    {
-    }
+		if (IsConnected)
+		{
+			// Only establish the reader/writer if the provided TcpClient is already connected.
+			_reader = new StreamReader(_tcpClient.GetStream(), Encoding.UTF8);
+			_writer = new StreamWriter(_tcpClient.GetStream(), Encoding.UTF8) { AutoFlush = true }; // AutoFlush ensures data is sent immediately
+		}
+	}
 
-    /// <summary>
-    /// Gets a value indicating whether the socket is connected.
-    /// </summary>
-    public bool IsConnected
-    {
-        get
-        {
-            return _tcpClient.Connected;
-        }
-    }
+	/// <summary>
+	///   Initializes a new instance of the <see cref="NetworkConnection"/> class.
+	///   <para>
+	///     Create a network connection object.  The tcpClient will be unconnected at the start.
+	///   </para>
+	/// </summary>
+	public NetworkConnection() : this(new TcpClient())
+	{
+	}
 
+	/// <summary>
+	/// Gets a value indicating whether the socket is connected.
+	/// </summary>
+	public bool IsConnected
+	{
+		get
+		{
+			return _tcpClient.Connected;
+		}
+	}
 
-    /// <summary>
-    ///   Try to connect to the given host:port. 
-    /// </summary>
-    /// <param name="host"> The URL or IP address, e.g., www.cs.utah.edu, or  127.0.0.1. </param>
-    /// <param name="port"> The port, e.g., 11000. </param>
-    public void Connect(string host, int port)
-    {
-        _tcpClient.Connect(host, port);
-    }
+	/// <summary>
+	/// Public field reperesnting the clients name. Is set to the first input the client enters. 
+	/// </summary>
+	public string Name
+	{
+		get; set;
+	}
 
+	/// <summary>
+	///   Try to connect to the given host:port. 
+	/// </summary>
+	/// <param name="host"> The URL or IP address, e.g., www.cs.utah.edu, or  127.0.0.1. </param>
+	/// <param name="port"> The port, e.g., 11000. </param>
+	public void Connect(string host, int port)
+	{
+		_tcpClient.Connect(host, port);
+		_reader = new StreamReader(_tcpClient.GetStream(), Encoding.UTF8);
+		_writer = new StreamWriter(_tcpClient.GetStream(), Encoding.UTF8) { AutoFlush = true };
+	}
 
-    /// <summary>
-    ///   Send a message to the remote server.  If the <paramref name="message"/> contains
-    ///   new lines, these will be treated on the receiving side as multiple messages.
-    ///   This method should attach a newline to the end of the <paramref name="message"/>
-    ///   (by using WriteLine).
-    ///   If this operation can not be completed (e.g. because this NetworkConnection is not
-    ///   connected), throw an InvalidOperationException.
-    /// </summary>
-    /// <param name="message"> The string of characters to send. </param>
-    public void Send(string message)
-    {
-        try
-        {
-            if (_writer != null)
-            {
-                _writer!.WriteLine(message);
-            }
-        }
-        catch
-        {
-            throw new InvalidOperationException();
-        }
-    }
+	/// <summary>
+	///   Send a message to the remote server.  If the <paramref name="message"/> contains
+	///   new lines, these will be treated on the receiving side as multiple messages.
+	///   This method should attach a newline to the end of the <paramref name="message"/>
+	///   (by using WriteLine).
+	///   If this operation can not be completed (e.g. because this NetworkConnection is not
+	///   connected), throw an InvalidOperationException.
+	/// </summary>
+	/// <param name="message"> The string of characters to send. </param>
+	public void Send(string message)
+	{
+		try
+		{
+			if (_writer != null)
+				_writer!.WriteLine(message);
+		}
+		catch
+		{
+			throw new InvalidOperationException();
+		}
+	}
 
+	/// <summary>
+	///   Read a message from the remote side of the connection.  The message will contain
+	///   all characters up to the first new line. See <see cref="Send"/>.
+	///   If this operation can not be completed (e.g. because this NetworkConnection is not
+	///   connected), throw an InvalidOperationException.
+	/// </summary>
+	/// <returns> The contents of the message. </returns>
+	public string ReadLine()
+	{
+		try
+		{
+			if (_reader == null)
+				throw new InvalidOperationException();
+			
+			string? message = _reader.ReadLine();
 
-    /// <summary>
-    ///   Read a message from the remote side of the connection.  The message will contain
-    ///   all characters up to the first new line. See <see cref="Send"/>.
-    ///   If this operation can not be completed (e.g. because this NetworkConnection is not
-    ///   connected), throw an InvalidOperationException.
-    /// </summary>
-    /// <returns> The contents of the message. </returns>
-    public string ReadLine()
-    {
-        try
-        {
-            if (_reader != null)
-            {
-                lock (_reader)
-                {
-                    string? message = _reader.ReadLine();
-                    if (message != null)
-                        return message;
-                }
-            }
-            return string.Empty;
-            //if (IsConnected)
-            //{
-            //    lock (_reader)
-            //    {
-            //        string? message;
-            //        if (_reader != null)
-            //        {
-            //            message = _reader!.ReadLine();
-            //        }
-            //    }
-            //}
-            //    return "";
-        }
-        catch (Exception e)
-        {
-            throw new InvalidOperationException(e.Message);
-        }
-    }
+			if (message == null)
+				throw new InvalidOperationException();
+			
+			return message;
+		}
+		catch (Exception e)
+		{
+			throw new InvalidOperationException(this.Name + " has left the chat.");
+		}
+	}
 
-    /// <summary>
-    ///   If connected, disconnect the connection and clean 
-    ///   up (dispose) any streams.
-    /// </summary>
-    public void Disconnect()
-    {
-        _tcpClient.Close();
-    }
+	/// <summary>
+	///   If connected, disconnect the connection and clean 
+	///   up (dispose) any streams.
+	/// </summary>
+	public void Disconnect()
+	{
+		_tcpClient.Close();
+	}
 
-    /// <summary>
-    ///   Automatically called with a using statement (see IDisposable)
-    /// </summary>
-    public void Dispose()
-    {
-        Disconnect();
-    }
+	/// <summary>
+	///   Automatically called with a using statement (see IDisposable)
+	/// </summary>
+	public void Dispose()
+	{
+		Disconnect();
+	}
 }

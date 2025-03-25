@@ -122,14 +122,14 @@
                     }
                     catch
                     {
-                        // add anything needed here to handle a disconnection from the server
+                        Console.WriteLine("Client disconnected from the server.");
                     }
                 }
             } ).Start();
         }
         catch
         {
-            // add anything needed here to handle a failure to connect
+            Console.WriteLine("Failure to connect to server.");
         }
 
     }
